@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path"
 	"strconv"
 	"strings"
 )
@@ -77,7 +78,7 @@ func fetchVod(url string, player string, destination *string) {
 	qualities := fetchQualities(videoUrl)
 	quality := readUserQuality(qualities)
 	urlParts := strings.Split(videoUrl, "/")
-	filename := *destination + "/" + urlParts[len(urlParts)-1] + ".mp4"
+	filename := path.Join(*destination, urlParts[len(urlParts)-1]+".mp4")
 	res, err := exec.Command("streamlink", "-o", filename, "-p", player, videoUrl, quality).Output()
 	if err != nil {
 		fmt.Println(err)
