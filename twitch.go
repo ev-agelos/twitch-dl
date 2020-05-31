@@ -10,13 +10,23 @@ import (
 	"strings"
 )
 
-func isStreamlinkInstalled() int {
-	cmd := exec.Command("/bin/sh", "-c", "command -v streamlink")
+func isCommandInstalled(command string) bool {
+	cmd := exec.Command("/bin/sh", "-c", "command", "-v", command)
 	if err := cmd.Run(); err != nil {
 		log.Fatal(err)
-		return 1
+		return false
 	}
-	return 0
+	return true
+}
+
+func getPlayer() (string, error) {
+	if isCommandInstalled("mpv") {
+		return "mpv", nil
+	}
+	if isCommandInstalled("vlc") {
+		return "vlc", nil
+	}
+	return "", fmt.Errorf("Mpv player is not installed, nor vlc.")
 }
 
 func cleanUrl(url string) string {
@@ -26,7 +36,7 @@ func cleanUrl(url string) string {
 	return video_url
 }
 
-func getQualities(url string) []string {
+func fetchQualities(url string) []string {
 	output, _ := exec.Command("streamlink", "-Q", url).Output()
 	qualities := string(output)
 	qualities = strings.Replace(qualities, " (worst)", "", -1)
@@ -62,17 +72,24 @@ func readUserQuality(qualities []string) string {
 }
 
 func main() {
-	err := isStreamlinkInstalled()
-	if err == 1 {
-		log.Fatal("Streamlink is not installed.")
+	if !isCommandInstalled("streamlink") {
+		log.Fatal("streamlink is not installed.")
+		os.Exit(1)
+	}
+
+	player, err := getPlayer()
+	if err != nil {
+		log.Fatal(err)
 		os.Exit(1)
 	}
 
 	for _, url := range os.Args[1:] {
-		video_url := cleanUrl(url)
-		qualities := getQualities(video_url)
+		videoUrl := cleanUrl(url)
+		qualities := fetchQualities(videoUrl)
 		quality := readUserQuality(qualities)
-		res, err := exec.Command("streamlink", video_url, quality).Output()
+		urlParts := strings.Split(videoUrl, "/")
+		filename := urlParts[len(urlParts)-1] + ".mp4"
+		res, err := exec.Command("streamlink", "-o", filename, "-p", player, videoUrl, quality).Output()
 		if err != nil {
 			fmt.Println(err)
 		}
