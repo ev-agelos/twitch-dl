@@ -86,6 +86,18 @@ func fetchVod(url string, player string, destination *string) {
 }
 
 func main() {
+	destination := flag.String("d", ".", "destination for the vod to be saved")
+	flag.Parse()
+
+	fileInfo, err := os.Stat(*destination)
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(1)
+	} else if !fileInfo.IsDir() {
+		log.Fatal("Destination is not a directory")
+		os.Exit(1)
+	}
+
 	if !isCommandInstalled("streamlink") {
 		log.Fatal("streamlink is not installed.")
 		os.Exit(1)
@@ -96,8 +108,6 @@ func main() {
 		log.Fatal(err)
 		os.Exit(1)
 	}
-	destination := flag.String("d", ".", "destination for the vod to be saved")
-	flag.Parse()
 
 	for _, url := range flag.Args() {
 		fetchVod(url, player, destination)
