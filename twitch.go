@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -71,6 +72,19 @@ func readUserQuality(qualities []string) string {
 	}
 }
 
+func fetchVod(url string, player string, destination *string) {
+	videoUrl := cleanUrl(url)
+	qualities := fetchQualities(videoUrl)
+	quality := readUserQuality(qualities)
+	urlParts := strings.Split(videoUrl, "/")
+	filename := *destination + "/" + urlParts[len(urlParts)-1] + ".mp4"
+	res, err := exec.Command("streamlink", "-o", filename, "-p", player, videoUrl, quality).Output()
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(string(res))
+}
+
 func main() {
 	if !isCommandInstalled("streamlink") {
 		log.Fatal("streamlink is not installed.")
@@ -82,17 +96,10 @@ func main() {
 		log.Fatal(err)
 		os.Exit(1)
 	}
+	destination := flag.String("d", ".", "destination for the vod to be saved")
+	flag.Parse()
 
-	for _, url := range os.Args[1:] {
-		videoUrl := cleanUrl(url)
-		qualities := fetchQualities(videoUrl)
-		quality := readUserQuality(qualities)
-		urlParts := strings.Split(videoUrl, "/")
-		filename := urlParts[len(urlParts)-1] + ".mp4"
-		res, err := exec.Command("streamlink", "-o", filename, "-p", player, videoUrl, quality).Output()
-		if err != nil {
-			fmt.Println(err)
-		}
-		fmt.Println(string(res))
+	for _, url := range flag.Args() {
+		fetchVod(url, player, destination)
 	}
 }
