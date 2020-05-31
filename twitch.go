@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"os/exec"
 	"path"
@@ -31,15 +32,15 @@ func getPlayer() (string, error) {
 	return "", fmt.Errorf("Mpv player is not installed, nor vlc.")
 }
 
-func cleanUrl(url string) string {
-	without_spaces := strings.TrimSpace(url)
+func cleanUrl(vodUrl string) string {
+	without_spaces := strings.TrimSpace(vodUrl)
 	// remove query string too
-	video_url := strings.Split(without_spaces, "?")[0]
-	return video_url
+	videoUrl := strings.Split(without_spaces, "?")[0]
+	return videoUrl
 }
 
-func fetchQualities(url string) []string {
-	output, _ := exec.Command("streamlink", "-Q", url).Output()
+func fetchQualities(vodUrl string) []string {
+	output, _ := exec.Command("streamlink", "-Q", vodUrl).Output()
 	qualities := string(output)
 	qualities = strings.Replace(qualities, " (worst)", "", -1)
 	qualities = strings.Replace(qualities, " (best)", "", -1)
@@ -73,13 +74,13 @@ func readUserQuality(qualities []string) string {
 	}
 }
 
-func fetchVod(url string, player string, destination *string) {
-	videoUrl := cleanUrl(url)
-	qualities := fetchQualities(videoUrl)
+func fetchVod(vodUrl string, player string, destination *string) {
+	vodUrl = cleanUrl(vodUrl)
+	qualities := fetchQualities(vodUrl)
 	quality := readUserQuality(qualities)
-	urlParts := strings.Split(videoUrl, "/")
+	urlParts := strings.Split(vodUrl, "/")
 	filename := path.Join(*destination, urlParts[len(urlParts)-1]+".mp4")
-	res, err := exec.Command("streamlink", "-o", filename, "-p", player, videoUrl, quality).Output()
+	res, err := exec.Command("streamlink", "-o", filename, "-p", player, vodUrl, quality).Output()
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -110,7 +111,13 @@ func main() {
 		os.Exit(1)
 	}
 
-	for _, url := range flag.Args() {
-		fetchVod(url, player, destination)
+	for _, vodUrl := range flag.Args() {
+		_, err := url.ParseRequestURI(vodUrl)
+		if err != nil {
+			log.Fatal(err)
+			continue
+		}
+
+		fetchVod(vodUrl, player, destination)
 	}
 }
