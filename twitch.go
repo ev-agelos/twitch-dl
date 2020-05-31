@@ -12,8 +12,7 @@ import (
 
 func isStreamlinkInstalled() int {
 	cmd := exec.Command("/bin/sh", "-c", "command -v streamlink")
-	err := cmd.Run()
-	if err != nil {
+	if err := cmd.Run(); err != nil {
 		log.Fatal(err)
 		return 1
 	}
@@ -28,7 +27,7 @@ func cleanUrl(url string) string {
 }
 
 func getQualities(url string) []string {
-	output, _ := exec.Command("/bin/sh", "-c", " streamlink -Q "+url).Output()
+	output, _ := exec.Command("streamlink", "-Q", url).Output()
 	qualities := string(output)
 	qualities = strings.Replace(qualities, " (worst)", "", -1)
 	qualities = strings.Replace(qualities, " (best)", "", -1)
@@ -73,7 +72,10 @@ func main() {
 		video_url := cleanUrl(url)
 		qualities := getQualities(video_url)
 		quality := readUserQuality(qualities)
-		cmd := exec.Command("/bin/sh", "-c", "streamlink "+video_url+" "+quality)
-		cmd.Run()
+		res, err := exec.Command("streamlink", video_url, quality).Output()
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(string(res))
 	}
 }
