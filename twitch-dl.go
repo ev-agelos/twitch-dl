@@ -16,7 +16,7 @@ import (
 func isCommandInstalled(command string) bool {
 	cmd := exec.Command("/bin/sh", "-c", "command", "-v", command)
 	if err := cmd.Run(); err != nil {
-		log.Fatal(err)
+		log.Print(err)
 		return false
 	}
 	return true
@@ -55,7 +55,8 @@ func readUserQuality(qualities []string) string {
 	for {
 		input, err := reader.ReadString('\n')
 		if err != nil {
-			log.Fatal(err)
+			log.Print(err)
+			continue
 		}
 		input = strings.TrimSpace(input)
 		selection, err := strconv.Atoi(input)
@@ -75,13 +76,13 @@ func fetchVod(vodUrl string, player string, destination *string) {
 	vodUrl = strings.Split(vodUrl, "?")[0] // remove query string
 	u, err := url.Parse(vodUrl)
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
 		return
 	}
 
 	qualities, err := fetchQualities(vodUrl)
 	if err != nil {
-		log.Fatal(err)
+		log.Print(err)
 		return
 	}
 	quality := readUserQuality(qualities)
@@ -119,7 +120,7 @@ func main() {
 	for _, vodUrl := range flag.Args() {
 		_, err := url.ParseRequestURI(vodUrl)
 		if err != nil {
-			log.Fatal(err)
+			log.Print(err)
 			continue
 		}
 
