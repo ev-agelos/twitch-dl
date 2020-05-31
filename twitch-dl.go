@@ -56,7 +56,6 @@ func readUserQuality(qualities []string) string {
 		input, err := reader.ReadString('\n')
 		if err != nil {
 			log.Fatal(err)
-			os.Exit(1)
 		}
 		input = strings.TrimSpace(input)
 		selection, err := strconv.Atoi(input)
@@ -97,25 +96,24 @@ func fetchVod(vodUrl string, player string, destination *string) {
 func main() {
 	destination := flag.String("d", ".", "destination for the vod to be saved")
 	flag.Parse()
+	if len(flag.Args()) == 0 {
+		log.Fatal("No url was given")
+	}
 
 	fileInfo, err := os.Stat(*destination)
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	} else if !fileInfo.IsDir() {
 		log.Fatal("Destination is not a directory")
-		os.Exit(1)
 	}
 
 	if !isCommandInstalled("streamlink") {
 		log.Fatal("streamlink is not installed.")
-		os.Exit(1)
 	}
 
 	player, err := getPlayer()
 	if err != nil {
 		log.Fatal(err)
-		os.Exit(1)
 	}
 
 	for _, vodUrl := range flag.Args() {
