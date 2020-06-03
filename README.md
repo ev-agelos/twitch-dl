@@ -16,6 +16,6 @@ go get gitlab.com/evagelos/twitch-dl
 ## Run
 
 ```bash
-# -d can be omitted, defauls to current directory
+# -d can be omitted, defaults to current directory
 twitch-dl -d ~/Downloads/ <twitch url>
 ```
